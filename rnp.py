@@ -1,6 +1,25 @@
 # https://ofdata.ru/
 import requests
 import json
+from pydantic import BaseModel
+from datetime import datetime
+
+
+class Address(BaseModel):
+    value: str
+
+class Data(BaseModel):
+    address: Address
+    inn: str
+    kpp: str
+    ogrn: str
+    ogrn_date: datetime
+
+class Dadata(BaseModel):
+    value: str
+    unrestricted_value: str
+    data: Data
+
 
 
 class OrgInfo:
@@ -19,6 +38,7 @@ class OrgInfo:
         response_json = json.loads(response.text)
         return response_json
 
+    @property
     def api_egrul(self) -> dict:
         """https://dadata.ru/api/find-party/#usage"""
         API_key = '019d0fea60b1e57c7d0b41d817b47864d0a9697b'
@@ -33,7 +53,8 @@ class OrgInfo:
                   'type': None
                   }
         response = requests.get(URL, headers=headers, params=params)
-        response_json = json.loads(response.text)['suggestions'][0]['data']
+        response_json = response.json()['suggestions'][0]
+        response_json = Dadata(**response_json)
         return response_json
 
     def rss_parser(self):
@@ -42,5 +63,5 @@ class OrgInfo:
 
 if __name__ == '__main__':
     from pprint import pprint as pp
-    test_api = OrgInfo('7813370716').api_egrul()
+    test_api = OrgInfo('7813370716').api_egrul
     pp(test_api)
